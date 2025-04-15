@@ -1,0 +1,12 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class ReturnToMenu : MonoBehaviour
+{
+    public string menuSceneName = "Menu"; // Change to your actual menu scene name
+
+    public void LoadMenuScene()
+    {
+        SceneManager.LoadScene(menuSceneName);
+    }
+}

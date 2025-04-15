@@ -1,0 +1,12 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class Level1Loader : MonoBehaviour
+{
+    public string levelSceneName = "Level 1"; // Change to your actual menu scene name
+
+    public void LoadLevelScene()
+    {
+        SceneManager.LoadScene(levelSceneName);
+    }
+}

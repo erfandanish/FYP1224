@@ -1,0 +1,45 @@
+using UnityEngine;
+
+public class MovingPlatformMirror : MonoBehaviour
+{
+    public Transform pointA; // First position
+    public Transform pointB; // Second position
+    public float moveSpeed = 2f; // Speed of movement
+
+    private Vector3 nextPosition; // Current target
+
+    void Start()
+    {
+        nextPosition = pointB.position; // Start moving towards pointB
+    }
+
+    void Update()
+    {
+       // Move towards the target position
+        transform.position = Vector3.MoveTowards(transform.position, nextPosition, moveSpeed * Time.deltaTime);
+
+        // If the platform reaches point A, switch to B
+        if (transform.position == nextPosition)
+        {
+            nextPosition = (nextPosition == pointA.position) ? pointB.position : pointA.position;
+        }
+        
+    }
+
+    // Make player stick to the platform
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            other.transform.parent = transform;
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            other.transform.parent = null;
+        }
+    }
+}

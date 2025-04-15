@@ -1,0 +1,124 @@
+using System.Collections;
+using UnityEngine;
+using TMPro;
+using Unity.Cinemachine;
+
+public class DialogueManager : MonoBehaviour
+{
+    [System.Serializable]
+    public class DialogueLine
+    {
+        public string speakerName;
+        [TextArea(2, 4)]
+        public string lineText;
+    }
+
+    public DialogueLine[] dialogueLines;
+
+    public TMP_Text dialogueText;
+    public TMP_Text speakerNameText;
+    public GameObject dialoguePanel;
+    public float typingSpeed = 0.05f;
+
+    private int currentLine = 0;
+    private bool isTyping = false;
+
+    public GameObject player;
+
+    // Camera References for Level 3
+    public bool useCameraSwitching = false;
+    public CinemachineCamera Vcm_Lukas;
+    public CinemachineCamera Vcm_Zarnoth;
+    public CinemachineCamera Vcm_MainGameplay;
+
+    void Start()
+    {
+        Time.timeScale = 1f;
+        Debug.Log("DialogueManager Start CALLED");
+        dialoguePanel.SetActive(true);
+        player.GetComponent<Player>().enabled = false;
+        StartCoroutine(TypeLine());
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
+        {
+            if (isTyping)
+            {
+                StopAllCoroutines();
+                dialogueText.text = dialogueLines[currentLine].lineText;
+                isTyping = false;
+            }
+            else
+            {
+                NextLine();
+            }
+        }
+    }
+
+    IEnumerator TypeLine()
+    {
+        Debug.Log("TypeLine START for: " + dialogueLines[currentLine].lineText);
+        isTyping = true;
+        speakerNameText.text = dialogueLines[currentLine].speakerName;
+        dialogueText.text = "";
+
+        if (useCameraSwitching)
+        {
+            Debug.Log("Switching camera...");
+            SwitchCamera(speakerNameText.text);
+        }
+
+        foreach (char letter in dialogueLines[currentLine].lineText)
+        {
+            dialogueText.text += letter;
+            Debug.Log("Typing letter: " + letter);
+            yield return new WaitForSeconds(typingSpeed);
+        }
+
+        isTyping = false;
+    }
+
+    void NextLine()
+    {
+        currentLine++;
+        if (currentLine < dialogueLines.Length)
+        {
+            StartCoroutine(TypeLine());
+        }
+        else
+        {
+            EndDialogue();
+        }
+    }
+
+    void EndDialogue()
+    {
+        if (useCameraSwitching)
+        {
+            Vcm_Lukas.Priority = 0;
+            Vcm_Zarnoth.Priority = 0;
+            Vcm_MainGameplay.Priority = 20;
+        }
+
+        player.GetComponent<Player>().enabled = true;
+
+        Destroy(dialoguePanel);
+        Destroy(gameObject);
+    }
+
+    void SwitchCamera(string speaker)
+    {
+        if (speaker.Contains("(Lukas) :"))
+        {
+            Vcm_Lukas.Priority = 20;
+            Vcm_Zarnoth.Priority = 10;
+        }
+        else if (speaker.Contains("(Zarnoth) :"))
+        {
+            Vcm_Lukas.Priority = 10;
+            Vcm_Zarnoth.Priority = 20;
+        }
+    }
+}

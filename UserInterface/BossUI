@@ -1,0 +1,36 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class BossUIManager : MonoBehaviour
+{
+    public GameObject bossUI;  // Assign in Inspector (Boss UI GameObject)
+
+    void Start()
+    {
+        // Ensure boss UI exists before trying to modify it
+        if (bossUI != null)
+        {
+            // Enable Boss UI only in Level 3
+            bossUI.SetActive(SceneManager.GetActiveScene().name == "Level 3");
+        }
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (bossUI != null)
+        {
+            // Enable Boss UI only in Level 3
+            bossUI.SetActive(scene.name == "Level 3");
+        }
+    }
+
+    void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+}

@@ -1,0 +1,103 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.Playables;
+using System.Collections;
+
+public class SceneManagement : MonoBehaviour
+{   
+
+    public void Play() {
+        Debug.Log("Open Level Choice");
+        SceneManager.LoadScene("Level Choice");
+    }
+
+    public void Level1() {
+        Debug.Log("Open Main Story");
+        SceneManager.LoadScene("MainStory");
+    }
+
+    public void Level2() {
+        Debug.Log("Open Level 2");
+        SceneManager.LoadScene("Level 2");
+    }
+
+    public void Level3() {
+        Debug.Log("Open Level 3");
+        SceneManager.LoadScene("Level 3");
+    }
+
+    public void Options() {
+        Debug.Log("Options");
+        SceneManager.LoadScene("Options");
+    }
+
+
+    public void Exit() {
+        Debug.Log("Exit");
+        Application.Quit();
+    }
+
+
+    public void Menu() {
+        Debug.Log("Load Menu");
+        SceneManager.LoadScene("Menu");
+    }
+   
+   public void Next() {
+        Debug.Log("Next Level");
+        SceneManager.LoadScene("Level 2");
+    }
+
+    public void Next2() {
+        Debug.Log("Boss Level");
+        SceneManager.LoadScene("Level 3");
+    }
+
+    public void Ending()
+    {
+        Debug.Log("Ending");
+
+        if (LevelMusicManager.instance != null)
+        {
+            Destroy(LevelMusicManager.instance.gameObject);
+            Debug.Log("Destroyed LevelMusicManager");
+        }
+
+        SceneManager.LoadScene("EndingScene");
+    }
+
+    private IEnumerator LoadEndingSceneAndPlayTimeline()
+    {
+        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync("EndingScene");
+
+        while (!asyncLoad.isDone)
+        {
+            yield return null;
+        }
+
+        yield return null; // Give Unity time to initialize objects
+
+        PlayTimeline();
+    }
+
+    private void PlayTimeline()
+    {
+        PlayableDirector director = FindObjectOfType<PlayableDirector>();
+
+        if (director != null)
+        {
+            director.Play();
+            Debug.Log("Playing Timeline...");
+        }
+        else
+        {
+            Debug.LogError("PlayableDirector not found!");
+        }
+    }
+
+
+    
+
+
+
+}

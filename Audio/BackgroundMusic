@@ -1,0 +1,71 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class LevelMusicManager : MonoBehaviour
+{
+    public static LevelMusicManager instance;
+
+    private AudioSource audioSource;
+    public AudioClip level1Music;  // Assign in Inspector
+    public AudioClip level2Music;  // Assign in Inspector
+    public AudioClip level3Music;  // New music for Level 3
+
+    void Awake()
+    {
+        // Ensure only one instance exists (Singleton Pattern)
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject); // Keep music across scenes
+        }
+        else
+        {
+            Destroy(gameObject); // Prevent duplicate music managers
+            return;
+        }
+
+        audioSource = GetComponent<AudioSource>();
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void Start()
+    {
+        PlayMusic(SceneManager.GetActiveScene().name); // Play correct music
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        PlayMusic(scene.name);
+    }
+
+    public void PlayMusic(string sceneName)
+    {
+        if (sceneName == "Menu" || sceneName == "EndingScene")
+        {
+            audioSource.Stop(); // Stop music in Menu and EndingScene
+        }
+        else
+        {
+            AudioClip newClip = null;
+
+            if (sceneName == "Level 1")
+                newClip = level1Music;
+            else if (sceneName == "Level 2")
+                newClip = level2Music;
+            else if (sceneName == "Level 3")
+                newClip = level3Music;
+
+            if (newClip != null && (audioSource.clip != newClip || !audioSource.isPlaying))
+            {
+                audioSource.clip = newClip;
+                audioSource.Play();
+            }
+        }
+    }
+
+
+    void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+}

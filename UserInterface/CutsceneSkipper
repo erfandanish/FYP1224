@@ -1,0 +1,72 @@
+using UnityEngine;
+using UnityEngine.Playables;
+using UnityEngine.UI;
+
+public class CutsceneSkipper : MonoBehaviour
+{
+    public PlayableDirector playableDirector;  // Reference to the PlayableDirector (cutscene)
+    public float skipThreshold = 0.5f;  // Duration for the hold (seconds) before skipping
+    private float holdTime = 0f;  // Time the spacebar is being held
+
+    private bool isCutscenePlaying = false;
+
+    void Start()
+    {
+        // Make sure we have a valid PlayableDirector reference
+        if (playableDirector == null)
+        {
+            playableDirector = GetComponent<PlayableDirector>();
+        }
+    }
+
+    void Update()
+    {
+        if (playableDirector != null)
+        {
+            if (playableDirector.state == PlayState.Playing)
+            {
+                isCutscenePlaying = true;
+                HandleSkipInput();
+            }
+            else
+            {
+                isCutscenePlaying = false;
+            }
+        }
+    }
+
+    void HandleSkipInput()
+    {
+        if (Input.GetKey(KeyCode.Space))  // Check if space is being held down
+        {
+            holdTime += Time.deltaTime;
+
+            // If the spacebar is held for longer than the threshold, skip the cutscene
+            if (holdTime >= skipThreshold)
+            {
+                SkipCutscene();
+            }
+        }
+        else
+        {
+            holdTime = 0f;  // Reset hold time if space is released
+        }
+
+        // If space is pressed once, skip the cutscene immediately
+        if (Input.GetKeyDown(KeyCode.Space) && holdTime < skipThreshold)
+        {
+            SkipCutscene();
+        }
+    }
+
+    void SkipCutscene()
+    {
+        if (isCutscenePlaying)
+        {
+            Debug.Log("Skipping cutscene...");
+            playableDirector.time = playableDirector.duration;  // Jump to the end of the timeline
+            playableDirector.Evaluate();  // Evaluate the timeline immediately
+            playableDirector.Stop();  // Stop the timeline
+        }
+    }
+}

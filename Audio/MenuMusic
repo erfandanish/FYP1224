@@ -1,0 +1,44 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class MenuMusicManager : MonoBehaviour
+{
+    private static MenuMusicManager instance;
+    private AudioSource audioSource;
+
+    void Awake()
+    {
+        // Ensure only one instance exists (Singleton Pattern)
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject); // Keep music across scenes
+        }
+        else
+        {
+            Destroy(gameObject); // Prevent duplicate music when returning to menu
+            return;
+        }
+
+        audioSource = GetComponent<AudioSource>();
+        audioSource.Play();
+
+        // Subscribe to sceneLoaded event
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // Stop and destroy Menu Music when entering MainStory, Level1, Level2, Level3, or EndingScene
+        if (scene.name == "MainStory" || scene.name == "Level 1" || scene.name == "Level 2" || scene.name == "Level 3" || scene.name == "EndingScene")
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    void OnDestroy()
+    {
+        // Unsubscribe from the event to prevent memory leaks
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+}

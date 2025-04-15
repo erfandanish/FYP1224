@@ -1,0 +1,16 @@
+using UnityEngine;
+
+public class DeathZone : MonoBehaviour
+{
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player")) // Ensure the Player has the tag "Player"
+        {
+            Player player = other.GetComponent<Player>();
+            if (player != null)
+            {
+                player.Die(); // Call the death function
+            }
+        }
+    }
+}

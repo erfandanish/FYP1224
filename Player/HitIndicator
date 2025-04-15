@@ -1,0 +1,50 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+public class HitIndicator : MonoBehaviour
+{
+    public CanvasGroup hitCanvasGroup;  // Reference to the CanvasGroup attached to the hit indicator's parent
+    public float fadeDuration = 0.5f;   // Duration of fade-in and fade-out
+    private float fadeTime = 0f;
+
+    private void Start()
+    {
+        // Initially make sure the hit indicator is invisible
+        hitCanvasGroup.alpha = 0f;
+        hitCanvasGroup.gameObject.SetActive(false);  // Hide the hit indicator
+    }
+
+    private void Update()
+    {
+        // Handle the fade-out effect (if the hit indicator is active)
+        if (fadeTime > 0)
+        {
+            fadeTime -= Time.deltaTime;
+
+            // Fade the alpha of the CanvasGroup over time
+            float alpha = Mathf.Lerp(1f, 0f, (fadeDuration - fadeTime) / fadeDuration);
+            hitCanvasGroup.alpha = alpha;
+
+            // Once fading is complete, hide the indicator
+            if (fadeTime <= 0)
+            {
+                hitCanvasGroup.gameObject.SetActive(false);  // Hide it after fade-out
+            }
+        }
+    }
+
+    // Call this method when a hit occurs
+    public void TriggerHitIndicator()
+    {
+        hitCanvasGroup.gameObject.SetActive(true);  // Show the hit indicator
+        hitCanvasGroup.alpha = 1f;  // Ensure it starts fully visible
+        fadeTime = fadeDuration;  // Set the duration for fading out
+    }
+
+    // Call this method to hide the hit indicator immediately
+    public void HideHitIndicatorImmediately()
+    {
+        hitCanvasGroup.gameObject.SetActive(false);  // Hide the hit indicator immediately
+        fadeTime = 0f;  // Reset fade time to prevent lingering fade
+    }
+}

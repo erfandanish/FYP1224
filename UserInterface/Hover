@@ -1,0 +1,29 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+public class ChangeColorOnHover : MonoBehaviour
+{
+    public Text text;
+    public Color hoverColor = new Color(0.91f, 0.63f, 0.19f); // #E8A131
+    public Color normalColor = Color.white;
+
+    void Start()
+    {
+        if (text == null) text = GetComponent<Text>();
+        text.color = normalColor;
+    }
+
+    public void SetHoverColor()
+    {
+        if (text != null)
+            text.color = hoverColor;
+            Debug.Log("Hover triggered!");
+
+    }
+
+    public void SetNormalColor()
+    {
+        if (text != null)
+            text.color = normalColor;
+    }
+}

@@ -1,0 +1,23 @@
+using UnityEngine;
+
+public class OptionsMenu : MonoBehaviour
+{
+    public GameObject controlsPanel;
+    public GameObject howToPanel;
+
+    public void ShowControls()
+    {
+        controlsPanel.SetActive(true);
+    }
+
+    public void ShowHowTo()
+    {
+        howToPanel.SetActive(true);
+    }
+
+    public void ClosePanels()
+    {
+        controlsPanel.SetActive(false);
+        howToPanel.SetActive(false);
+    }
+}

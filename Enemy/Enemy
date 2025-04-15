@@ -1,0 +1,257 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+using Unity.Cinemachine;
+
+public class PatrolEnemy : MonoBehaviour
+{
+    public bool facingLeft = true;
+    public float moveSpeed = 2f; 
+    public Transform checkPoint;
+    public float distance = 1f;
+    public LayerMask layerMask;
+    public bool inRange = false;
+    public Transform player;
+    public float attackRange = 10f;
+    public float retrieveDistance = 2.5f;
+    public float chaseSpeed = 4f;
+    public Animator animator;
+
+    public Transform attackPoint;
+    public float attackRadius = 1f;
+    public LayerMask attackLayer;
+    public int maxHealth = 4;
+    private SpriteRenderer spriteRenderer;
+    public float knockbackForce = 5f;
+    public float hitStunDuration = 0.2f;
+    private Rigidbody2D rb;
+    public bool isStunned = false;
+
+    public AudioClip attackSkeletonSFX;
+    
+    private AudioSource audioSource;
+    private CinemachineImpulseSource impulseSource;
+
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        rb = GetComponent<Rigidbody2D>();
+        audioSource = GetComponent<AudioSource>();
+        impulseSource = GetComponent<CinemachineImpulseSource>();
+    }
+
+    void PlaySound(AudioClip clip, bool loop)
+{
+    if (audioSource != null && clip != null)
+    {
+        if (audioSource.clip == clip && audioSource.isPlaying)
+        {
+            return; // Don't restart if it's already playing
+        }
+
+        audioSource.clip = clip;
+        audioSource.loop = loop;
+        audioSource.Play();
+    }
+}
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (maxHealth <= 0) {
+            StartCoroutine(DieCoroutine());
+        }
+
+        if (player != null && Vector2.Distance(transform.position, player.position) <= attackRange ) {
+            inRange = true; 
+        }
+        else {
+            inRange = false;
+        }
+
+        
+
+        if (inRange && player != null) {
+
+                if (player.position.x > transform.position.x && facingLeft == true) {
+                    transform.eulerAngles = new Vector3(0, -180, 0);
+                    facingLeft = false;
+                }
+                else if (player.position.x < transform.position.x && facingLeft == false) {
+                    transform.eulerAngles = new Vector3(0, 0, 0);
+                    facingLeft = true;
+                }
+                if (Vector2.Distance(transform.position, player.position) > retrieveDistance) {
+                    animator.SetBool("Attack1", false);
+                    transform.position = Vector2.MoveTowards(transform.position, player.position,chaseSpeed * Time.deltaTime);
+                }
+                else {
+                    animator.SetBool("Attack1", true);
+                }
+        }
+        else {
+             transform.Translate(Vector2.left * Time.deltaTime * moveSpeed);
+
+             RaycastHit2D hit = Physics2D.Raycast(checkPoint.position, Vector2.down, distance, layerMask);
+
+            if (hit == false && facingLeft) 
+            {
+                transform.eulerAngles = new Vector3(0, -180 ,0);
+                facingLeft = false;
+            }
+            else if(hit == false && facingLeft == false) 
+            {
+                transform.eulerAngles = new Vector3(0, 0 ,0);
+                facingLeft = true;
+            }
+        }
+
+       
+    }
+
+    public void Attack() {
+        Collider2D collInfo = Physics2D.OverlapCircle(attackPoint.position, attackRadius, attackLayer);
+
+        if (collInfo) {
+            if (collInfo.gameObject.GetComponent<Player>() != null) {
+                collInfo.gameObject.GetComponent<Player>().TakeDamage(1);
+                
+                if( attackSkeletonSFX != null)
+                {
+                    audioSource.PlayOneShot(attackSkeletonSFX);
+                }
+            }
+        }
+    }
+
+   public void TakeDamage(int damage, Vector2 attackDirection) {
+        if (maxHealth <= 0 || isStunned) {
+            return;
+        }
+
+        
+
+        Debug.Log("🔴 TakeDamage called on " + gameObject.name);
+    
+        if (impulseSource == null)
+        {
+            Debug.LogError("❌ ImpulseSource is NULL in " + gameObject.name);
+            return;
+        }
+
+        CameraShakeManager.instance.CameraShake(impulseSource);
+
+        
+        StartCoroutine(FlashHit());
+        maxHealth -= damage;
+
+        if (maxHealth > 0) 
+        {
+            StartCoroutine(HitImpact(attackDirection));
+            StartCoroutine(HitFreeze(0.08f, 0.1f)); // 🔥 Stronger freeze (0.08s duration, 10% speed)
+        }
+        else 
+        {
+            StartCoroutine(DieCoroutine());
+        }
+    }
+
+   
+    
+
+
+
+
+   private void OnDrawGizmosSelected()
+    {
+        if (checkPoint != null) {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawRay(checkPoint.position, Vector3.down * distance);
+        }
+
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, attackRange);
+
+        if (attackPoint != null) {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(attackPoint.position, attackRadius);
+        }
+    }
+
+    private IEnumerator HitImpact(Vector2 attackDirection) {
+        isStunned =true;
+
+        rb.linearVelocity = Vector2.zero;
+        rb.AddForce(attackDirection * knockbackForce, ForceMode2D.Impulse);
+
+        yield return new WaitForSeconds(hitStunDuration);
+        isStunned = false;
+    }
+    
+   private IEnumerator FlashHit()
+    {
+        int flashCount = 3;  // Number of flashes
+        float flashDuration = 0.05f; // Time per flash
+
+        for (int i = 0; i < flashCount; i++)
+        {
+            spriteRenderer.color = new Color(2f, 2f, 2f, 1f); // SUPER BRIGHT WHITE (overexposed effect)
+            yield return new WaitForSeconds(flashDuration);
+            spriteRenderer.color = Color.gray; // Slightly darkened effect for contrast
+            yield return new WaitForSeconds(flashDuration);
+        }
+
+        // Smooth fade back to normal
+        float fadeDuration = 0.2f;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < fadeDuration)
+        {
+            float lerp = Mathf.PingPong(elapsedTime * 5, 1);
+            spriteRenderer.color = Color.Lerp(Color.gray, Color.white, lerp);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        spriteRenderer.color = Color.white; // Ensure it fully resets to normal
+    }
+
+
+
+
+    IEnumerator HitFreeze(float duration, float slowMotionFactor)
+    {
+        Time.timeScale = slowMotionFactor;  
+        Time.fixedDeltaTime = 0.02f * Time.timeScale; // ✅ Ensure physics updates match time scale
+        Debug.Log($" Time scale set to {slowMotionFactor} for {duration} seconds.");
+
+        yield return new WaitForSecondsRealtime(duration);  // Ensures real-time wait
+
+        Time.timeScale = 1f;  
+        Time.fixedDeltaTime = 0.02f; // ✅ Reset physics step to normal
+        Debug.Log(" Time scale reset to 1f.");
+    }
+
+
+
+    IEnumerator DieCoroutine()
+    {
+        Debug.Log(this.transform.name + " Died.");
+
+        yield return StartCoroutine(HitFreeze(0.15f, 0.05f)); // Strong slow-mo
+
+        Time.timeScale = 1f; // ✅ FORCE RESET TIME before anything else
+        Debug.Log(" Time scale reset to normal before death.");
+
+        
+        
+        Destroy(gameObject); // Finally destroy enemy
+    }
+
+
+
+
+    
+
+}
